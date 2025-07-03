@@ -71,7 +71,7 @@ async function sendTestReminder(sock) {
   }
 
   const testMessage =
-    "🧪 Test reminder: This is a test message from your Quran bot!";
+    "🧪 This is a test reminder: This is a test message from your Quran bot!";
 
   console.log(`🧪 Sending test reminder to ${allowedGroups.length} groups`);
 
