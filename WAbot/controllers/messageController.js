@@ -22,8 +22,16 @@ async function handleIncomingMessages(messageUpdate, sock) {
 
     // Skip messages sent by me
     if (message.key.fromMe) {
-      console.log("⏭️ Skipping my own message");
-      return;
+      const from = message.key.remoteJid;
+      const messageText =
+        message.message.conversation ||
+        message.message.extendedTextMessage?.text ||
+        "";
+
+      console.log(`From: ${from}`);
+      console.log(`Text: "${messageText}"`);
+      // console.log("⏭️ Skipping my own message");
+      // return;
     }
 
     // Skip if no message content

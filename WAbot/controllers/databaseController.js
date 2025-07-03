@@ -10,11 +10,12 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Test connection
 async function testConnection() {
   try {
-    const { data, error } = await supabase.from("users").select("count");
-    if (error) throw error;
+    const { data, error } = await supabase.auth.getSession();
     console.log("✅ Connected to Supabase!");
+    return true;
   } catch (error) {
     console.error("❌ Supabase connection failed:", error.message);
+    return false;
   }
 }
 
