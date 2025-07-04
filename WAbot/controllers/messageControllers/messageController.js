@@ -78,160 +78,211 @@ async function handleIncomingMessages(messageUpdate, sock) {
 }
 
 // HANDLE COMMANDS
+// async function handleCommands(messageText, from, sock, message) {
+//   const text = messageText.toLowerCase();
+
+//   // Test Reminder
+//   if (text.startsWith("test reminder")) {
+//     console.log("🧪 Sending test reminder...");
+//     const { sendTestReminder } = require("./reminderController");
+//     await sendTestReminder(sock);
+//   }
+
+//   // Handle /energy command
+//   if (text.startsWith("/energy")) {
+//     console.log("⚡ Processing /energy command...");
+//     const parts = messageText.trim().split(" ");
+
+//     if (parts.length === 2) {
+//       const energyLevel = parseInt(parts[1]);
+
+//       if (energyLevel >= 1 && energyLevel <= 5) {
+//         const { saveEnergyLogDB } = require("../databaseController");
+//         await saveUserKPI(
+//           message,
+//           from,
+//           sock,
+//           "energy",
+//           energyLevel,
+//           saveEnergyLogDB
+//         );
+//       } else {
+//         await sock.sendMessage(from, {
+//           text: "❌ Energy level must be 1-5\nExample: /energy 4",
+//         });
+//       }
+//     } else {
+//       await sock.sendMessage(from, {
+//         text: "❌ Invalid format!\nUse: /energy [1-5]\nExample: /energy 4",
+//       });
+//     }
+//   }
+
+//   // Handle /note command
+//   if (text.startsWith("/note")) {
+//     console.log("📝 Processing /note command...");
+//     const note = messageText.substring(6).trim();
+
+//     if (note) {
+//       await saveUserKPI(message, from, sock, "note", note);
+//     } else {
+//       await sock.sendMessage(from, {
+//         text: "❌ Please add your note\nExample: /note feeling productive today",
+//       });
+//     }
+//   }
+
+//   // Handle /help command
+//   if (text.startsWith("/help")) {
+//     console.log("📋 Showing help menu...");
+
+//     const helpMessage = `🕐 *HourlyTracker Bot Commands*
+
+// 📊 *Tracking Commands:*
+// - \`/energy [1-10]\` - Log energy level
+// - \`/mood [text]\` - Log your mood
+// - \`/activity [text]\` - Log what you're doing
+// - \`/food [text]\` - Log what you ate
+// - \`/note [text]\` - Add thoughts/ideas
+
+// ⚙️ *Utility Commands:*
+// - \`/help\` - Show this menu
+// - \`/undo\` - Delete your last entry
+
+// Track every hour! 📈`;
+
+//     await sock.sendMessage(from, { text: helpMessage });
+//   }
+
+//   //Handle /undo command
+//   if (text.startsWith("/undo")) {
+//     console.log("↩️ Processing /undo command...");
+
+//     try {
+//       const userId = message.key.participant || message.key.remoteJid;
+//       const cleanUserId = userId
+//         .replace("@s.whatsapp.net", "")
+//         .replace("@lid", "");
+//       const pushName = message.pushName || cleanUserId;
+
+//       console.log(`👤 Looking for last entry for user: ${cleanUserId}`);
+
+//       const lastEntry = await getLastUserEntry(cleanUserId);
+
+//       if (lastEntry) {
+//         const deletedEntry = await deleteLogEntry(lastEntry.id);
+//         const loggedTime = new Date(lastEntry.logged_at).toLocaleString();
+
+//         console.log(
+//           `✅ Successfully deleted entry: ${lastEntry.kpi_type} - ${lastEntry.value}`
+//         );
+
+//         await sock.sendMessage(from, {
+//           text: `✅ Undone last entry.\n\n📊 ${lastEntry.kpi_type}: ${lastEntry.value}\n📅 Logged: ${loggedTime}\n👤 User: ${pushName}`,
+//         });
+//       } else {
+//         console.log(`❌ No entries found for user: ${cleanUserId}`);
+//         await sock.sendMessage(from, {
+//           text: `❌ No recent entries found to undo.\n👤 User: ${pushName}\n\nMake sure you have logged some data first using tracking commands.`,
+//         });
+//       }
+//     } catch (error) {
+//       console.error("❌ Undo error details:");
+//       console.error("Error message:", error.message);
+//       console.error("Full error:", error);
+
+//       await sock.sendMessage(from, {
+//         text: `❌ Sorry, there was an error with undo. Please try again later.\n\nError: ${error.message}`,
+//       });
+//     }
+//   }
+// }
+
+// HANDLE COMMANDS
 async function handleCommands(messageText, from, sock, message) {
   const text = messageText.toLowerCase();
 
-  // Test Reminder
   if (text.startsWith("test reminder")) {
     console.log("🧪 Sending test reminder...");
     const { sendTestReminder } = require("./reminderController");
     await sendTestReminder(sock);
   }
 
-  // Handle /energy command
   if (text.startsWith("/energy")) {
-    console.log("⚡ Processing /energy command...");
-    const parts = messageText.trim().split(" ");
-
-    if (parts.length === 2) {
-      const energyLevel = parseInt(parts[1]);
-
-      if (energyLevel >= 1 && energyLevel <= 5) {
-        const { saveEnergyLogDB } = require("../databaseController");
-        await saveUserKPI(
-          message,
-          from,
-          sock,
-          "energy",
-          energyLevel,
-          saveEnergyLogDB
-        );
-      } else {
-        await sock.sendMessage(from, {
-          text: "❌ Energy level must be 1-5\nExample: /energy 4",
-        });
-      }
-    } else {
-      await sock.sendMessage(from, {
-        text: "❌ Invalid format!\nUse: /energy [1-5]\nExample: /energy 4",
-      });
-    }
+    const { handleEnergyLog } = require("./handleCommands/handleEnergyLog");
+    await handleEnergyLog(messageText, from, sock, message);
   }
 
-  // Handle /note command
-  if (text.startsWith("/note")) {
-    console.log("📝 Processing /note command...");
-    const note = messageText.substring(6).trim();
-
-    if (note) {
-      await saveUserKPI(message, from, sock, "note", note);
-    } else {
-      await sock.sendMessage(from, {
-        text: "❌ Please add your note\nExample: /note feeling productive today",
-      });
-    }
+  if (text.startsWith("/sleep")) {
+    const { handleSleepLog } = require("./handleCommands/handleSleepLog");
+    await handleSleepLog(messageText, from, sock, message);
   }
 
-  // Handle /help command
+  if (text.startsWith("/hour")) {
+    const { handleHourlyLog } = require("./handleCommands/handleHourlyLog");
+    await handleHourlyLog(messageText, from, sock, message);
+  }
+
+  if (text.startsWith("/thought")) {
+    const { handleThoughtLog } = require("./handleCommands/handleThoughtLog");
+    await handleThoughtLog(messageText, from, sock, message, "thought");
+  }
+
+  if (text.startsWith("/feeling")) {
+    const { handleThoughtLog } = require("./handleCommands/handleThoughtLog");
+    await handleThoughtLog(messageText, from, sock, message, "feeling");
+  }
+
+  if (text.startsWith("/idea")) {
+    const { handleThoughtLog } = require("./handleCommands/handleThoughtLog");
+    await handleThoughtLog(messageText, from, sock, message, "idea");
+  }
+
   if (text.startsWith("/help")) {
-    console.log("📋 Showing help menu...");
-
-    const helpMessage = `🕐 *HourlyTracker Bot Commands*
-
-📊 *Tracking Commands:*
-- \`/energy [1-10]\` - Log energy level
-- \`/mood [text]\` - Log your mood
-- \`/activity [text]\` - Log what you're doing
-- \`/food [text]\` - Log what you ate
-- \`/note [text]\` - Add thoughts/ideas
-
-⚙️ *Utility Commands:*
-- \`/help\` - Show this menu
-- \`/undo\` - Delete your last entry
-
-Track every hour! 📈`;
-
-    await sock.sendMessage(from, { text: helpMessage });
+    const { handleHelpCommand } = require("./handleCommands/handleHelpCommand");
+    await handleHelpCommand(from, sock);
   }
 
-  //Handle /undo command
   if (text.startsWith("/undo")) {
-    console.log("↩️ Processing /undo command...");
-
-    try {
-      const userId = message.key.participant || message.key.remoteJid;
-      const cleanUserId = userId
-        .replace("@s.whatsapp.net", "")
-        .replace("@lid", "");
-      const pushName = message.pushName || cleanUserId;
-
-      console.log(`👤 Looking for last entry for user: ${cleanUserId}`);
-
-      const lastEntry = await getLastUserEntry(cleanUserId);
-
-      if (lastEntry) {
-        const deletedEntry = await deleteLogEntry(lastEntry.id);
-        const loggedTime = new Date(lastEntry.logged_at).toLocaleString();
-
-        console.log(
-          `✅ Successfully deleted entry: ${lastEntry.kpi_type} - ${lastEntry.value}`
-        );
-
-        await sock.sendMessage(from, {
-          text: `✅ Undone last entry.\n\n📊 ${lastEntry.kpi_type}: ${lastEntry.value}\n📅 Logged: ${loggedTime}\n👤 User: ${pushName}`,
-        });
-      } else {
-        console.log(`❌ No entries found for user: ${cleanUserId}`);
-        await sock.sendMessage(from, {
-          text: `❌ No recent entries found to undo.\n👤 User: ${pushName}\n\nMake sure you have logged some data first using tracking commands.`,
-        });
-      }
-    } catch (error) {
-      console.error("❌ Undo error details:");
-      console.error("Error message:", error.message);
-      console.error("Full error:", error);
-
-      await sock.sendMessage(from, {
-        text: `❌ Sorry, there was an error with undo. Please try again later.\n\nError: ${error.message}`,
-      });
-    }
+    const { handleUndoCommand } = require("./handleCommands/handleUndoCommand");
+    await handleUndoCommand(from, sock, message);
   }
 }
 
 // Helper function to save KPI data
-async function saveUserKPI(message, from, sock, kpiType, value, saveFunction) {
-  try {
-    const userId = message.key.participant || message.key.remoteJid;
-    const cleanUserId = userId
-      .replace("@s.whatsapp.net", "")
-      .replace("@lid", "");
-    const displayName = message.pushName || cleanUserId;
-    const pushName = message.pushName;
+// async function saveUserKPI(message, from, sock, kpiType, value, saveFunction) {
+//   try {
+//     const userId = message.key.participant || message.key.remoteJid;
+//     const cleanUserId = userId
+//       .replace("@s.whatsapp.net", "")
+//       .replace("@lid", "");
+//     const displayName = message.pushName || cleanUserId;
+//     const pushName = message.pushName;
 
-    console.log(`👤 User ID: ${cleanUserId}`);
-    console.log(`👤 Display Name: ${displayName}`);
-    console.log(`📊 ${kpiType}: ${value}`);
+//     console.log(`👤 User ID: ${cleanUserId}`);
+//     console.log(`👤 Display Name: ${displayName}`);
+//     console.log(`📊 ${kpiType}: ${value}`);
 
-    const user = await createOrGetUser(cleanUserId, displayName, pushName);
-    const logEntry = await saveFunction(user.id, value);
+//     const user = await createOrGetUser(cleanUserId, displayName, pushName);
+//     const logEntry = await saveFunction(user.id, value);
 
-    console.log(`✅ Successfully saved log entry ID: ${logEntry.id}`);
+//     console.log(`✅ Successfully saved log entry ID: ${logEntry.id}`);
 
-    await sock.sendMessage(from, {
-      text: `✅ ${kpiType} logged!\n⚡ Level: ${value}/5\n👤 User: ${
-        pushName || displayName
-      }`,
-    });
-  } catch (error) {
-    console.error("❌ Database error details:");
-    console.error("Error message:", error.message);
-    console.error("Full error:", error);
+//     await sock.sendMessage(from, {
+//       text: `✅ ${kpiType} logged!\n⚡ Level: ${value}/5\n👤 User: ${
+//         pushName || displayName
+//       }`,
+//     });
+//   } catch (error) {
+//     console.error("❌ Database error details:");
+//     console.error("Error message:", error.message);
+//     console.error("Full error:", error);
 
-    await sock.sendMessage(from, {
-      text: `❌ Sorry, there was an error saving your log. Please try again later.\n\nError: ${error.message}`,
-    });
-  }
-}
+//     await sock.sendMessage(from, {
+//       text: `❌ Sorry, there was an error saving your log. Please try again later.\n\nError: ${error.message}`,
+//     });
+//   }
+// }
 
 module.exports = {
   handleIncomingMessages,
