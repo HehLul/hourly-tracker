@@ -7,19 +7,17 @@ const getAllowedGroups = () => {
 
 // Generate hourly reminder messages
 const getHourlyMessage = (hour) => {
-  const messages = [
-    "🕐 Hourly check-in! How was the past hour? Rate it and log what you did!",
-    "⏰ Time to reflect! How did you spend the last hour? Use /hour to log it!",
-    "📊 Hourly tracker reminder! Rate your past hour (1-5) and note your activity!",
-    "🔔 Check-in time! What did you accomplish this past hour? Don't forget to log it!",
-    "⚡ Energy check! How are you feeling? Log your energy and what you've been up to!",
-    "📝 Hourly log reminder! Take a moment to track your progress from the past hour!",
-    "🎯 Time to track! How productive was your last hour? Rate it and log your activity!",
-    "💪 Stay consistent! Log what you did this past hour to track your daily progress!",
-  ];
+  // Special messages for specific times
+  if (hour === 6) {
+    return "🌅 Good morning! Time to log your sleep! Use /sleep [bedtime] [waketime] [quality 1-5] [tiredness 1-5]";
+  }
 
-  // Rotate message based on hour to add variety
-  return messages[hour % messages.length];
+  if (hour === 11) {
+    return "⚡ Mid-morning energy check! How's your energy level right now? Use /energy [1-5]";
+  }
+
+  // Same message for all other hours
+  return "🕐 Make sure to log your hour and energy";
 };
 
 // Generate hourly reminder times from 6am to 12am (midnight)
