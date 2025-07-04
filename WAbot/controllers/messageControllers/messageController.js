@@ -3,9 +3,13 @@ const { config, configDotenv } = require("dotenv");
 // controllers/messageController.js
 const {
   createOrGetUser,
-  saveHourlyLog,
-  getLastUserEntry,
+  testConnection,
+  saveSleepLogDB,
+  saveEnergyLogDB,
+  saveHourlyLogDB,
+  saveThoughtLogDB,
   deleteLogEntry,
+  getLastUserEntry,
 } = require("../databaseController");
 const { getAllowedGroups } = require("./reminderController");
 
@@ -92,58 +96,24 @@ async function handleCommands(messageText, from, sock, message) {
     if (parts.length === 2) {
       const energyLevel = parseInt(parts[1]);
 
-      if (energyLevel >= 1 && energyLevel <= 10) {
-        await saveUserKPI(message, from, sock, "energy", energyLevel);
+      if (energyLevel >= 1 && energyLevel <= 5) {
+        const { saveEnergyLogDB } = require("../databaseController");
+        await saveUserKPI(
+          message,
+          from,
+          sock,
+          "energy",
+          energyLevel,
+          saveEnergyLogDB
+        );
       } else {
         await sock.sendMessage(from, {
-          text: "❌ Energy level must be 1-10\nExample: /energy 7",
+          text: "❌ Energy level must be 1-5\nExample: /energy 4",
         });
       }
     } else {
       await sock.sendMessage(from, {
-        text: "❌ Invalid format!\nUse: /energy [1-10]\nExample: /energy 7",
-      });
-    }
-  }
-
-  // Handle /mood command
-  if (text.startsWith("/mood")) {
-    console.log("😊 Processing /mood command...");
-    const mood = messageText.substring(6).trim();
-
-    if (mood) {
-      await saveUserKPI(message, from, sock, "mood", mood);
-    } else {
-      await sock.sendMessage(from, {
-        text: "❌ Please specify your mood\nExample: /mood happy",
-      });
-    }
-  }
-
-  // Handle /activity command
-  if (text.startsWith("/activity")) {
-    console.log("🏃 Processing /activity command...");
-    const activity = messageText.substring(10).trim();
-
-    if (activity) {
-      await saveUserKPI(message, from, sock, "activity", activity);
-    } else {
-      await sock.sendMessage(from, {
-        text: "❌ Please specify your activity\nExample: /activity coding",
-      });
-    }
-  }
-
-  // Handle /food command
-  if (text.startsWith("/food")) {
-    console.log("🍽️ Processing /food command...");
-    const food = messageText.substring(6).trim();
-
-    if (food) {
-      await saveUserKPI(message, from, sock, "food", food);
-    } else {
-      await sock.sendMessage(from, {
-        text: "❌ Please specify what you ate\nExample: /food salad",
+        text: "❌ Invalid format!\nUse: /energy [1-5]\nExample: /energy 4",
       });
     }
   }
@@ -229,7 +199,7 @@ Track every hour! 📈`;
 }
 
 // Helper function to save KPI data
-async function saveUserKPI(message, from, sock, kpiType, value) {
+async function saveUserKPI(message, from, sock, kpiType, value, saveFunction) {
   try {
     const userId = message.key.participant || message.key.remoteJid;
     const cleanUserId = userId
@@ -240,15 +210,15 @@ async function saveUserKPI(message, from, sock, kpiType, value) {
 
     console.log(`👤 User ID: ${cleanUserId}`);
     console.log(`👤 Display Name: ${displayName}`);
-    console.log(`📊 KPI: ${kpiType} = ${value}`);
+    console.log(`📊 ${kpiType}: ${value}`);
 
     const user = await createOrGetUser(cleanUserId, displayName, pushName);
-    const logEntry = await saveHourlyLog(user.id, kpiType, value);
+    const logEntry = await saveFunction(user.id, value);
 
     console.log(`✅ Successfully saved log entry ID: ${logEntry.id}`);
 
     await sock.sendMessage(from, {
-      text: `✅ Logged successfully!\n📊 ${kpiType}: ${value}\n👤 User: ${
+      text: `✅ ${kpiType} logged!\n⚡ Level: ${value}/5\n👤 User: ${
         pushName || displayName
       }`,
     });

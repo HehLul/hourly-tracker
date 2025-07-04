@@ -30,9 +30,7 @@ async function createOrGetUser(phoneNumber, displayName = null) {
       .single();
 
     if (existingUser) {
-      console.log(
-        `👤 Found existing user: ${existingUser.display_name || phoneNumber}`
-      );
+      console.log(`👤 Found existing user: ${existingUser.name}`);
       return existingUser;
     }
 
@@ -42,11 +40,7 @@ async function createOrGetUser(phoneNumber, displayName = null) {
       .insert([
         {
           phone_number: phoneNumber,
-          display_name: displayName || phoneNumber,
-          total_pages: 0,
-          current_streak: 0,
-          longest_streak: 0,
-          daily_goal: 5,
+          name: displayName || phoneNumber,
         },
       ])
       .select()
@@ -54,7 +48,7 @@ async function createOrGetUser(phoneNumber, displayName = null) {
 
     if (insertError) throw insertError;
 
-    console.log(`✨ Created new user: ${newUser.display_name}`);
+    console.log(`✨ Created new user: ${newUser.name}`);
     return newUser;
   } catch (error) {
     console.error("❌ Error with user:", error.message);
@@ -62,133 +56,153 @@ async function createOrGetUser(phoneNumber, displayName = null) {
   }
 }
 
-// Add these functions to your existing databaseController.js
-
-// Get or create user
-async function createOrGetUser(phoneNumber, displayName = null) {
-  try {
-    // First, try to find existing user
-    const { data: existingUser, error: selectError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("phone_number", phoneNumber)
-      .single();
-
-    if (existingUser) {
-      console.log(
-        `👤 Found existing user: ${existingUser.display_name || phoneNumber}`
-      );
-      return existingUser;
-    }
-
-    // If user doesn't exist, create new one
-    const { data: newUser, error: insertError } = await supabase
-      .from("users")
-      .insert([
-        {
-          phone_number: phoneNumber,
-          display_name: displayName || phoneNumber,
-          total_pages: 0,
-          current_streak: 0,
-          longest_streak: 0,
-          daily_goal: 5,
-        },
-      ])
-      .select()
-      .single();
-
-    if (insertError) throw insertError;
-
-    console.log(`✨ Created new user: ${newUser.display_name}`);
-    return newUser;
-  } catch (error) {
-    console.error("❌ Error with user:", error.message);
-    throw error;
-  }
-}
-
-// Save Quran log entry
-async function saveQuranLog(
-  userId,
-  action,
-  startVerse,
-  endVerse,
-  pagesCount = 1
-) {
+// Save sleep log
+async function saveSleepLogDB(userId, bedtime, waketime, quality, tiredness) {
   try {
     const { data, error } = await supabase
-      .from("quran_logs")
+      .from("sleep_logs")
       .insert([
         {
           user_id: userId,
-          action: action,
-          start_verse: startVerse,
-          end_verse: endVerse,
-          pages_count: pagesCount,
-          log_date: new Date().toISOString().split("T")[0], // Today's date
+          bedtime: bedtime,
+          wake_time: waketime,
+          sleep_quality: quality,
+          tiredness_level: tiredness,
+          sleep_date: new Date().toISOString().split("T")[0], // Today's date
         },
       ])
       .select()
       .single();
 
     if (error) throw error;
-
-    console.log(`💾 Saved log: ${action} ${startVerse}-${endVerse}`);
     return data;
   } catch (error) {
-    console.error("❌ Error saving log:", error.message);
+    console.error("❌ Error saving sleep log:", error.message);
     throw error;
   }
 }
 
-// Calculate pages from verses (basic estimation)
-function calculatePages(startVerse, endVerse) {
-  // Simple calculation - you can make this more accurate later
-  const [startChapter, startVerse_] = startVerse.split(":").map(Number);
-  const [endChapter, endVerse_] = endVerse.split(":").map(Number);
-
-  if (startChapter === endChapter) {
-    // Same chapter - rough estimate: 20 verses per page
-    return Math.max(1, Math.ceil((endVerse_ - startVerse_ + 1) / 20));
-  } else {
-    // Different chapters - rough estimate
-    return Math.max(1, (endChapter - startChapter + 1) * 2);
-  }
-}
-
-// Get user's most recent log entry
-async function getLastUserEntry(userId) {
+// Save energy log
+async function saveEnergyLogDB(userId, energyLevel) {
   try {
     const { data, error } = await supabase
-      .from("quran_logs")
-      .select(
-        `
-        *,
-        users!inner(phone_number)
-      `
-      )
-      .eq("users.phone_number", userId)
-      .order("logged_at", { ascending: false })
-      .limit(1)
+      .from("energy_logs")
+      .insert([
+        {
+          user_id: userId,
+          energy_level: energyLevel,
+        },
+      ])
+      .select()
       .single();
 
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows found
-      throw error;
-    }
-
-    return data || null;
+    if (error) throw error;
+    return data;
   } catch (error) {
-    console.error("❌ Error getting last entry:", error.message);
+    console.error("❌ Error saving energy log:", error.message);
     throw error;
   }
 }
 
-// Delete a log entry by ID
-async function deleteLogEntry(entryId) {
+// Save hourly log
+async function saveHourlyLogDB(userId, rating, activity) {
   try {
     const { data, error } = await supabase
-      .from("quran_logs")
+      .from("hourly_logs")
+      .insert([
+        {
+          user_id: userId,
+          hour_rating: rating,
+          activity: activity,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("❌ Error saving hourly log:", error.message);
+    throw error;
+  }
+}
+
+// Save thought/feeling/idea log
+async function saveThoughtLogDB(userId, content, logType) {
+  try {
+    const { data, error } = await supabase
+      .from("thoughts_logs")
+      .insert([
+        {
+          user_id: userId,
+          content: content,
+          log_type: logType,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("❌ Error saving thought log:", error.message);
+    throw error;
+  }
+}
+
+// Get user's most recent log entry across all tables (for undo command)
+async function getLastUserEntry(phoneNumber) {
+  try {
+    // Get user ID first
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("phone_number", phoneNumber)
+      .single();
+
+    if (userError) throw userError;
+
+    // Check all log tables for the most recent entry
+    const tables = [
+      { name: "sleep_logs", table: "sleep_logs" },
+      { name: "energy_logs", table: "energy_logs" },
+      { name: "hourly_logs", table: "hourly_logs" },
+      { name: "thoughts_logs", table: "thoughts_logs" },
+    ];
+
+    let mostRecentEntry = null;
+    let mostRecentTime = null;
+
+    for (const tableInfo of tables) {
+      const { data, error } = await supabase
+        .from(tableInfo.table)
+        .select("*")
+        .eq("user_id", user.id)
+        .order("logged_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (
+        data &&
+        (!mostRecentTime || new Date(data.logged_at) > new Date(mostRecentTime))
+      ) {
+        mostRecentEntry = { ...data, table_name: tableInfo.name };
+        mostRecentTime = data.logged_at;
+      }
+    }
+
+    return mostRecentEntry;
+  } catch (error) {
+    console.error("❌ Error getting last entry:", error.message);
+    return null;
+  }
+}
+
+// Delete a log entry by ID and table name
+async function deleteLogEntry(entryId, tableName) {
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
       .delete()
       .eq("id", entryId)
       .select()
@@ -196,7 +210,7 @@ async function deleteLogEntry(entryId) {
 
     if (error) throw error;
 
-    console.log(`🗑️ Deleted log entry ID: ${entryId}`);
+    console.log(`🗑️ Deleted log entry ID: ${entryId} from ${tableName}`);
     return data;
   } catch (error) {
     console.error("❌ Error deleting entry:", error.message);
@@ -208,8 +222,10 @@ module.exports = {
   supabase,
   testConnection,
   createOrGetUser,
-  saveQuranLog,
-  calculatePages,
+  saveSleepLogDB,
+  saveEnergyLogDB,
+  saveHourlyLogDB,
+  saveThoughtLogDB,
   getLastUserEntry,
   deleteLogEntry,
 };
