@@ -205,24 +205,11 @@ async function handleCommands(messageText, from, sock, message) {
     await handleSleepLog(messageText, from, sock, message);
   }
 
-  if (text.startsWith("/hour")) {
-    const { handleHourlyLog } = require("./handleCommands/handleHourlyLog");
-    await handleHourlyLog(messageText, from, sock, message);
-  }
-
-  if (text.startsWith("/thought")) {
-    const { handleThoughtLog } = require("./handleCommands/handleThoughtLog");
-    await handleThoughtLog(messageText, from, sock, message, "thought");
-  }
-
-  if (text.startsWith("/feeling")) {
-    const { handleThoughtLog } = require("./handleCommands/handleThoughtLog");
-    await handleThoughtLog(messageText, from, sock, message, "feeling");
-  }
-
-  if (text.startsWith("/idea")) {
-    const { handleThoughtLog } = require("./handleCommands/handleThoughtLog");
-    await handleThoughtLog(messageText, from, sock, message, "idea");
+  if (text.startsWith("/checkin")) {
+    const {
+      handleHourlyCheckinLog,
+    } = require("./handleCommands/handleHourlyCheckinLog");
+    await handleHourlyCheckinLog(messageText, from, sock, message);
   }
 
   if (text.startsWith("/help")) {

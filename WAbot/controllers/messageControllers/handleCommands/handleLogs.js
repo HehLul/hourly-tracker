@@ -45,7 +45,7 @@ async function handleLogs(message, from, sock, params) {
           params.rating,
           params.activity
         );
-        successMessage = `✅ Hour logged!\n🕐 Rating: ${params.rating}/5\n📝 Activity: ${params.activity}`;
+        successMessage = `✅ Checkin has been logged!\n🕐 Rating: ${params.rating}/5\n📝 Note: ${params.activity}`;
         break;
 
       case "thought":
