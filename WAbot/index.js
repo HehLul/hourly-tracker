@@ -33,6 +33,15 @@ async function WAbot() {
   // Handle connection updates
   sock.ev.on("connection.update", (update) => {
     handleConnectionUpdate(update, WAbot, sock);
+
+    // Start hourly reminders when connection is open
+    if (update.connection === "open") {
+      console.log("🔗 WhatsApp connected! Starting hourly reminders...");
+      const {
+        startScheduledReminders,
+      } = require("./controllers/messageControllers/reminderController");
+      startScheduledReminders(sock);
+    }
   });
 
   // Save credentials when updated

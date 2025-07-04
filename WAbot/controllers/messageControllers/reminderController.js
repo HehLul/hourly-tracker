@@ -1,28 +1,53 @@
 require("dotenv").config();
-
-// controllers/reminderController.js
 const cron = require("node-cron");
 
-// Configuration - now supports multiple groups
 const getAllowedGroups = () => {
   return process.env.WA_ALLOWED_GROUPS?.split(",").map((id) => id.trim()) || [];
 };
 
-const REMINDER_TIMES = [
-  {
-    time: "09:00",
-    message:
-      "🌅 Good morning! Don't forget to update your Quran reading for today!",
-  },
-  {
-    time: "22:00",
-    message: "🌙 Evening reminder: Have you updated your Quran progress today?",
-  },
-];
+// Generate hourly reminder messages
+const getHourlyMessage = (hour) => {
+  const messages = [
+    "🕐 Hourly check-in! How was the past hour? Rate it and log what you did!",
+    "⏰ Time to reflect! How did you spend the last hour? Use /hour to log it!",
+    "📊 Hourly tracker reminder! Rate your past hour (1-5) and note your activity!",
+    "🔔 Check-in time! What did you accomplish this past hour? Don't forget to log it!",
+    "⚡ Energy check! How are you feeling? Log your energy and what you've been up to!",
+    "📝 Hourly log reminder! Take a moment to track your progress from the past hour!",
+    "🎯 Time to track! How productive was your last hour? Rate it and log your activity!",
+    "💪 Stay consistent! Log what you did this past hour to track your daily progress!",
+  ];
+
+  // Rotate message based on hour to add variety
+  return messages[hour % messages.length];
+};
+
+// Generate hourly reminder times from 6am to 12am (midnight)
+const generateHourlyReminders = () => {
+  const reminders = [];
+
+  // 6am to 11pm (6:00 to 23:00)
+  for (let hour = 6; hour <= 23; hour++) {
+    reminders.push({
+      time: `${hour.toString().padStart(2, "0")}:00`,
+      message: getHourlyMessage(hour),
+    });
+  }
+
+  // Add midnight (00:00)
+  reminders.push({
+    time: "00:00",
+    message: getHourlyMessage(0),
+  });
+
+  return reminders;
+};
+
+const REMINDER_TIMES = generateHourlyReminders();
 
 // Scheduled reminder function - sends to ALL allowed groups
 function startScheduledReminders(sock) {
-  console.log("📅 Setting up scheduled reminders...");
+  console.log("📅 Setting up hourly reminders...");
 
   const allowedGroups = getAllowedGroups();
 
@@ -32,7 +57,7 @@ function startScheduledReminders(sock) {
   }
 
   console.log(
-    `📱 Will send reminders to ${allowedGroups.length} groups:`,
+    `📱 Will send hourly reminders to ${allowedGroups.length} groups:`,
     allowedGroups
   );
 
@@ -42,38 +67,32 @@ function startScheduledReminders(sock) {
     const cronTime = `${minute} ${hour} * * *`; // Every day at specified time
 
     cron.schedule(cronTime, async () => {
-      console.log(`⏰ Sending scheduled reminder at ${time} to all groups`);
+      console.log(`⏰ Sending hourly reminder at ${time} to all groups`);
 
       // Send to ALL allowed groups
       for (const groupId of allowedGroups) {
         try {
           await sock.sendMessage(groupId, { text: message });
-          console.log(`✅ Reminder sent to ${groupId}`);
+          console.log(`✅ Hourly reminder sent to ${groupId} at ${time}`);
         } catch (error) {
           console.error(`❌ Failed to send reminder to ${groupId}:`, error);
         }
       }
     });
 
-    console.log(
-      `⏰ Scheduled reminder set for ${time} (${allowedGroups.length} groups)`
-    );
+    console.log(`⏰ Scheduled hourly reminder set for ${time}`);
   });
+
+  console.log(
+    `📊 Total scheduled reminders: ${REMINDER_TIMES.length} (6am-12am)`
+  );
 }
 
-// Manual function to send reminder now (for testing) - sends to ALL groups
+// Test reminder function for development
 async function sendTestReminder(sock) {
   const allowedGroups = getAllowedGroups();
-
-  if (allowedGroups.length === 0) {
-    console.log("⚠️ No groups configured for test reminder");
-    return;
-  }
-
   const testMessage =
-    "🧪 This is a test reminder: This is a test message from your Quran bot!";
-
-  console.log(`🧪 Sending test reminder to ${allowedGroups.length} groups`);
+    "🧪 Test hourly reminder! This is what you'll receive every hour from 6am-12am!";
 
   for (const groupId of allowedGroups) {
     try {
@@ -85,26 +104,8 @@ async function sendTestReminder(sock) {
   }
 }
 
-// Send to specific group only
-async function sendReminderToGroup(sock, groupId, message) {
-  try {
-    await sock.sendMessage(groupId, { text: message });
-    console.log(`✅ Custom reminder sent to ${groupId}`);
-  } catch (error) {
-    console.error(`❌ Failed to send custom reminder to ${groupId}:`, error);
-  }
-}
-
-// Add new reminder time
-function addReminderTime(time, message) {
-  REMINDER_TIMES.push({ time, message });
-}
-
 module.exports = {
   startScheduledReminders,
   sendTestReminder,
-  sendReminderToGroup,
-  addReminderTime,
   getAllowedGroups,
-  REMINDER_TIMES,
 };
