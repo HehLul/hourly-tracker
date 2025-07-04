@@ -4,7 +4,9 @@ const makeWASocket = require("@whiskeysockets/baileys").default;
 const { useMultiFileAuthState } = require("@whiskeysockets/baileys");
 
 // Import controllers
-const { handleIncomingMessages } = require("./controllers/messageController");
+const {
+  handleIncomingMessages,
+} = require("./controllers/messageControllers/messageController");
 const {
   handleConnectionUpdate,
   handleCredentialsUpdate,

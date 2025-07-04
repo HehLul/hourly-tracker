@@ -6,7 +6,7 @@ const {
   saveHourlyLog,
   getLastUserEntry,
   deleteLogEntry,
-} = require("./databaseController");
+} = require("../databaseController");
 const { getAllowedGroups } = require("./reminderController");
 
 // READ INCOMING MESSAGES

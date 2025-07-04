@@ -1,7 +1,9 @@
 // controllers/connectionController.js
 const qrcode = require("qrcode-terminal");
 const { DisconnectReason } = require("@whiskeysockets/baileys");
-const { startScheduledReminders } = require("./reminderController");
+const {
+  startScheduledReminders,
+} = require("./messageControllers/reminderController");
 
 // Handle connection updates
 function handleConnectionUpdate(update, WAbot, sock) {
