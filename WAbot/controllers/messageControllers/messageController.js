@@ -1,16 +1,4 @@
 require("dotenv").config();
-const { config, configDotenv } = require("dotenv");
-// controllers/messageController.js
-const {
-  createOrGetUser,
-  testConnection,
-  saveSleepLogDB,
-  saveEnergyLogDB,
-  saveHourlyLogDB,
-  saveThoughtLogDB,
-  deleteLogEntry,
-  getLastUserEntry,
-} = require("../databaseController");
 const { getAllowedGroups } = require("./reminderController");
 
 // READ INCOMING MESSAGES
@@ -77,7 +65,6 @@ async function handleIncomingMessages(messageUpdate, sock) {
   });
 }
 
-// HANDLE COMMANDS
 // async function handleCommands(messageText, from, sock, message) {
 //   const text = messageText.toLowerCase();
 
@@ -248,41 +235,6 @@ async function handleCommands(messageText, from, sock, message) {
     await handleUndoCommand(from, sock, message);
   }
 }
-
-// Helper function to save KPI data
-// async function saveUserKPI(message, from, sock, kpiType, value, saveFunction) {
-//   try {
-//     const userId = message.key.participant || message.key.remoteJid;
-//     const cleanUserId = userId
-//       .replace("@s.whatsapp.net", "")
-//       .replace("@lid", "");
-//     const displayName = message.pushName || cleanUserId;
-//     const pushName = message.pushName;
-
-//     console.log(`👤 User ID: ${cleanUserId}`);
-//     console.log(`👤 Display Name: ${displayName}`);
-//     console.log(`📊 ${kpiType}: ${value}`);
-
-//     const user = await createOrGetUser(cleanUserId, displayName, pushName);
-//     const logEntry = await saveFunction(user.id, value);
-
-//     console.log(`✅ Successfully saved log entry ID: ${logEntry.id}`);
-
-//     await sock.sendMessage(from, {
-//       text: `✅ ${kpiType} logged!\n⚡ Level: ${value}/5\n👤 User: ${
-//         pushName || displayName
-//       }`,
-//     });
-//   } catch (error) {
-//     console.error("❌ Database error details:");
-//     console.error("Error message:", error.message);
-//     console.error("Full error:", error);
-
-//     await sock.sendMessage(from, {
-//       text: `❌ Sorry, there was an error saving your log. Please try again later.\n\nError: ${error.message}`,
-//     });
-//   }
-// }
 
 module.exports = {
   handleIncomingMessages,
